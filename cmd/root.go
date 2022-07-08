@@ -59,27 +59,7 @@ func createVideoData(developerKey string, channelID string) {
 	// チャンネルの動画のvideoIDを全て取得する
 	videoIDs := getVideoIDs(uploadsID, service)
 
-	var videoDatas []entity.VideoData
-	for _, videoID := range videoIDs {
-		call := service.Videos.List([]string{"snippet", "statistics"}).Id(videoID)
-		response, err := call.Do()
-		if err != nil {
-			log.Fatalf("Error call YouTube API: %v", err)
-		}
-
-		item := response.Items[0]
-		videoData := entity.VideoData{
-			VideoID:       videoID,
-			Title:         item.Snippet.Title,
-			ViewCount:     item.Statistics.ViewCount,
-			LikeCount:     item.Statistics.LikeCount,
-			DislikeCount:  item.Statistics.DislikeCount,
-			FavoriteCount: item.Statistics.FavoriteCount,
-			CommentCount:  item.Statistics.CommentCount,
-			PublishedAt:   item.Snippet.PublishedAt,
-		}
-		videoDatas = append(videoDatas, videoData)
-	}
+	videoDatas := getVideoDatas(videoIDs, service)
 
 	outputCSV(videoDatas)
 }
@@ -106,6 +86,30 @@ func getVideoIDs(uploadsID string, service *youtube.Service) (videoIDs []string)
 	}
 
 	return videoIDs
+}
+
+func getVideoDatas(videoIDs []string, service *youtube.Service) (videoDatas []entity.VideoData) {
+	for _, videoID := range videoIDs {
+		call := service.Videos.List([]string{"snippet", "statistics"}).Id(videoID)
+		response, err := call.Do()
+		if err != nil {
+			log.Fatalf("Error call YouTube API: %v", err)
+		}
+
+		item := response.Items[0]
+		videoData := entity.VideoData{
+			VideoID:       videoID,
+			Title:         item.Snippet.Title,
+			ViewCount:     item.Statistics.ViewCount,
+			LikeCount:     item.Statistics.LikeCount,
+			DislikeCount:  item.Statistics.DislikeCount,
+			FavoriteCount: item.Statistics.FavoriteCount,
+			CommentCount:  item.Statistics.CommentCount,
+			PublishedAt:   item.Snippet.PublishedAt,
+		}
+		videoDatas = append(videoDatas, videoData)
+	}
+	return videoDatas
 }
 
 func outputCSV(videoDatas []entity.VideoData) {
