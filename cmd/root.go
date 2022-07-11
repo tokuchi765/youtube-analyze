@@ -76,6 +76,7 @@ func getUploadsID(channelID string, service *youtube.Service) string {
 
 func getVideoIDs(uploadsID string, service *youtube.Service) (videoIDs []string) {
 	playlistsCall := service.PlaylistItems.List([]string{"snippet", "contentDetails"}).PlaylistId(uploadsID).MaxResults(50)
+
 	playlistsResponse, err := playlistsCall.Do()
 	if err != nil {
 		log.Fatalf("Error call YouTube API: %v", err)
@@ -83,6 +84,24 @@ func getVideoIDs(uploadsID string, service *youtube.Service) (videoIDs []string)
 
 	for _, item := range playlistsResponse.Items {
 		videoIDs = append(videoIDs, item.ContentDetails.VideoId)
+	}
+
+	if playlistsResponse.NextPageToken != "" {
+		nextPageToken := playlistsResponse.NextPageToken
+		for {
+			nextCall := service.PlaylistItems.List([]string{"snippet", "contentDetails"}).PlaylistId(uploadsID).PageToken(nextPageToken).MaxResults(50)
+			nextResponse, err := nextCall.Do()
+			if err != nil {
+				log.Fatalf("Error call YouTube API: %v", err)
+			}
+			for _, nextItem := range nextResponse.Items {
+				videoIDs = append(videoIDs, nextItem.ContentDetails.VideoId)
+			}
+			nextPageToken = nextResponse.NextPageToken
+			if nextPageToken == "" {
+				break
+			}
+		}
 	}
 
 	return videoIDs
