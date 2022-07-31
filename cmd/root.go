@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -133,6 +135,12 @@ func getVideoDatas(videoIDs []string, service *youtube.Service) (videoDatas []en
 
 func outputCSV(videoDatas []entity.VideoData) {
 	file, _ := os.OpenFile(time.Now().Format("20060102150405")+"_youtube_data.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+
+	gocsv.SetCSVWriter(func(out io.Writer) *gocsv.SafeCSVWriter {
+		file.Write([]byte{0xEF, 0xBB, 0xBF})
+		w := csv.NewWriter(file)
+		return gocsv.NewSafeCSVWriter(w)
+	})
 
 	gocsv.MarshalFile(videoDatas, file)
 
