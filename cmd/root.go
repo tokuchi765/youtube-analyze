@@ -16,15 +16,31 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-// RootCmd is root command
-var RootCmd = &cobra.Command{
-	Use:   "analyze",
-	Short: "YouTube data csv output",
-	Run: func(cmd *cobra.Command, args []string) {
-		current, _ := os.Getwd()
-		config, _ := loadConfig(current)
-		createVideoData(config.DeveloperKey, config.ChannelID)
-	},
+// NewCmdRoot ルートコマンドを生成します
+func NewCmdRoot() *cobra.Command {
+
+	cmd := &cobra.Command{
+		Use:   "analyze",
+		Short: "YouTube data csv output",
+		Run: func(cmd *cobra.Command, args []string) {
+			current, _ := os.Getwd()
+			config, _ := loadConfig(current)
+			createVideoData(config.DeveloperKey, config.ChannelID)
+		},
+	}
+
+	return cmd
+}
+
+// Execute コマンドライン実行
+func Execute() {
+	cmd := NewCmdRoot()
+	cmd.SetOutput(os.Stdout)
+	if err := cmd.Execute(); err != nil {
+		cmd.SetOutput(os.Stderr)
+		cmd.Println(err)
+		os.Exit(1)
+	}
 }
 
 type config struct {
