@@ -18,6 +18,13 @@ import (
 
 // NewCmdRoot ルートコマンドを生成します
 func NewCmdRoot() *cobra.Command {
+	type Options struct {
+		auth string `validate:"alphanum"`
+	}
+
+	var (
+		o = &Options{}
+	)
 
 	cmd := &cobra.Command{
 		Use:   "analyze",
@@ -25,9 +32,11 @@ func NewCmdRoot() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			current, _ := os.Getwd()
 			config, _ := loadConfig(current)
-			createVideoData(config.DeveloperKey, config.ChannelID)
+			createVideoData(config.DeveloperKey, config.ChannelID, current, o.auth)
 		},
 	}
+
+	cmd.Flags().StringVarP(&o.auth, "auth", "a", "oauth", "Choose authentication option from (api,oauth).")
 
 	return cmd
 }
@@ -61,9 +70,15 @@ func loadConfig(current string) (*config, error) {
 	return &cfg, err
 }
 
-func createVideoData(developerKey string, channelID string) {
-	client := &http.Client{
-		Transport: &transport.APIKey{Key: developerKey},
+func createVideoData(developerKey string, channelID string, current string, option string) {
+
+	var client *http.Client
+	if option == "oauth" {
+		client = getClient(youtube.YoutubeReadonlyScope, current)
+	} else if option == "api" {
+		client = &http.Client{
+			Transport: &transport.APIKey{Key: developerKey},
+		}
 	}
 
 	service, err := youtube.New(client)
