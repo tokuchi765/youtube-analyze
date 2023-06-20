@@ -98,6 +98,48 @@ func getClient(scope string, current string) *http.Client {
 	return config.Client(ctx, tok)
 }
 
+func getCtxTok(scope string, current string) (context.Context, *oauth2.Token, *oauth2.Config) {
+	ctx := context.Background()
+
+	b, err := ioutil.ReadFile(current + "/client_secrets.json")
+	if err != nil {
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
+
+	// If modifying the scope, delete your previously saved credentials
+	// at ~/.credentials/youtube-go.json
+	config, err := google.ConfigFromJSON(b, scope)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+	// Use a redirect URI like this for a web app. The redirect URI must be a
+	// valid one for your OAuth2 credentials.
+	config.RedirectURL = "http://localhost:8090"
+	// Use the following redirect URI if launchWebServer=false in oauth2.go
+	// config.RedirectURL = "urn:ietf:wg:oauth:2.0:oob"
+
+	cacheFile, err := tokenCacheFile()
+	if err != nil {
+		log.Fatalf("Unable to get path to cached credential file. %v", err)
+	}
+	tok, err := tokenFromFile(cacheFile)
+	if err != nil {
+		authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+		if launchWebServer {
+			fmt.Println("Trying to get token from web")
+			tok, err = getTokenFromWeb(config, authURL)
+		} else {
+			fmt.Println("Trying to get token from prompt")
+			tok, err = getTokenFromPrompt(config, authURL)
+		}
+		if err == nil {
+			saveToken(cacheFile, tok)
+		}
+	}
+
+	return ctx, tok, config
+}
+
 // startWebServer starts a web server that listens on http://localhost:8080.
 // The webserver waits for an oauth code in the three-legged auth flow.
 func startWebServer() (codeCh chan string, err error) {
