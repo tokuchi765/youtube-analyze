@@ -1,4 +1,5 @@
 config.json
 .vscode
 main.exe
+client_secrets.json
 youtube-analyze.code-workspace
