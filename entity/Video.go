@@ -2,20 +2,20 @@ package entity
 
 // VideoData 動画情報を保持する
 type VideoData struct {
-	VideoID                 string  `csv:id`
-	Title                   string  `csv:titel`
-	TotalViewCount          uint64  `csv:total view count`
-	TotalLikeCount          uint64  `csv:total like count`
-	TotalDislikeCount       uint64  `csv:total dislike count`
-	TotalFavoriteCount      uint64  `csv:total favorite count`
-	TotalCommentCount       uint64  `csv:total comment count`
-	PublishedAt             string  `csv:published at`
-	ViewCount               float64 `csv:view count`
-	EstimatedMinutesWatched float64 `csv:estimated minutes watched`
-	AverageViewDuration     float64 `csv:average view duration`
-	Comments                float64 `csv:comments`
-	Likes                   float64 `csv:likes`
-	Dislikes                float64 `csv:dislikes`
-	SubscribersGained       float64 `csv:subscribers gained`
-	SubscribersLost         float64 `csv:subscribers lost`
+	VideoID                 string  `csv:"ビデオID"`
+	Title                   string  `csv:"タイトル"`
+	TotalViewCount          uint64  `csv:"総再生数"`
+	TotalLikeCount          uint64  `csv:"総高評価数"`
+	TotalDislikeCount       uint64  `csv:"総低評価数"`
+	TotalFavoriteCount      uint64  `csv:"総お気に入り数"`
+	TotalCommentCount       uint64  `csv:"総コメント数"`
+	PublishedAt             string  `csv:"公開日時"`
+	ViewCount               float64 `csv:"期間内再生数"`
+	EstimatedMinutesWatched float64 `csv:"期間内再生時間(分)"`
+	AverageViewDuration     float64 `csv:"期間内平均視聴時間(秒)"`
+	Comments                float64 `csv:"期間内コメント数"`
+	Likes                   float64 `csv:"期間内高評価数"`
+	Dislikes                float64 `csv:"期間内低評価数"`
+	SubscribersGained       float64 `csv:"期間内登録回数"`
+	SubscribersLost         float64 `csv:"期間内登録解除回数"`
 }
