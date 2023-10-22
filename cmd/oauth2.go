@@ -13,6 +13,9 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -123,6 +126,7 @@ func getCtxTok(scope string, current string) (context.Context, *oauth2.Token, *o
 		log.Fatalf("Unable to get path to cached credential file. %v", err)
 	}
 	tok, err := tokenFromFile(cacheFile)
+
 	if err != nil {
 		authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 		if launchWebServer {
@@ -136,6 +140,8 @@ func getCtxTok(scope string, current string) (context.Context, *oauth2.Token, *o
 			saveToken(cacheFile, tok)
 		}
 	}
+
+	checkAccessTokenValidity(tok.AccessToken, config.ClientSecret)
 
 	return ctx, tok, config
 }
@@ -264,4 +270,35 @@ func saveToken(file string, token *oauth2.Token) {
 	}
 	defer f.Close()
 	json.NewEncoder(f).Encode(token)
+}
+
+// トークンのアクセス権限をチェックします
+func checkAccessTokenValidity(accessToken string, secretKey string) error {
+	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secretKey), nil
+	})
+
+	// Check for errors
+	if err != nil {
+		return err
+	}
+
+	// Check token validity
+	if !token.Valid {
+		return fmt.Errorf("Invalid token")
+	}
+
+	// Check token expiration
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		expirationTime := time.Unix(int64(claims["exp"].(float64)), 0)
+		if time.Now().After(expirationTime) {
+			return fmt.Errorf("トークンの有効期限が切れています。youtube-go.jsonを削除してください。")
+		}
+	}
+
+	return nil
 }
